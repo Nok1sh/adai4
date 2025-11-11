@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import time
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_training_history(history):
     """Визуализирует историю обучения"""
@@ -79,14 +80,12 @@ def inference_time(model, test_loader, device="cuda", num_runs=10):
     avg_time_per_batch = (end_time - start_time) / num_runs
     return avg_time_per_batch
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
-import numpy as np
+
 
 def plot_confusion_matrix_for_models(models, model_names, test_loader):
     
     fig, axes = plt.subplots(2, 2, figsize=(18, 5))
+    axes = axes.flatten() 
     
     for idx, (model, name) in enumerate(zip(models, model_names)):
         all_predictions = []

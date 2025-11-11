@@ -4,7 +4,7 @@ import torch.optim as optim
 from tqdm import tqdm
 
 
-def run_epoch(model, data_loader, criterion, optimizer=None, device='cpu', is_test=False):
+def run_epoch(model, data_loader, criterion, optimizer=None, device='cuda', is_test=False):
     if is_test:
         model.eval()
     else:
@@ -35,7 +35,7 @@ def run_epoch(model, data_loader, criterion, optimizer=None, device='cpu', is_te
     return total_loss / len(data_loader), correct / total
 
 
-def train_model(model, train_loader, test_loader, weight_decay=None, epochs=10, lr=0.001, device='cpu'):
+def train_model(model, train_loader, test_loader, weight_decay=None, epochs=10, lr=0.001, device='cuda'):
     criterion = nn.CrossEntropyLoss()
     if weight_decay is None:
         optimizer = optim.Adam(model.parameters(), lr=lr)

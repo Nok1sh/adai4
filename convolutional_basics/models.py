@@ -25,7 +25,6 @@ class ResidualBlock(nn.Module):
         out = F.relu(out)
         return out
 
-
 class BottleneckBlock(nn.Module):
     expansion = 4
 
@@ -91,15 +90,18 @@ class WideResidualBlock(nn.Module):
         out += self.shortcut(x)
         return out
 
-
 class SimpleCNN(nn.Module):
-    def __init__(self, input_channels=1, num_classes=10, kernel1=3, kernel2=3, padding1=1, padding2=1):
+    def __init__(self, input_channels=1, num_classes=10, kernel1=3, kernel2=3, padding1=1, padding2=1, data=None):
         super().__init__()
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, padding1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, padding2)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 7 * 7, 128)
-        self.fc2 = nn.Linear(128, num_classes)
+        if data is None:
+            self.fc1 = nn.Linear(64 * 7*7, 128)
+            self.fc2 = nn.Linear(128, num_classes)
+        else:
+            self.fc1 = nn.Linear(64*8*8, 256)
+            self.fc2 = nn.Linear(256, num_classes)
         self.dropout = nn.Dropout(0.25)
     
     def forward(self, x):
@@ -117,7 +119,7 @@ class SimpleCNN4Conv(nn.Module):
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, 1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, 1)
         self.conv3 = nn.Conv2d(64, 64, kernel1, 1, 1)
-        self.conv4 = nn.Conv2d(64, 32, kernel2, 1, 1)
+        self.conv4 = nn.Conv2d(64, 64, kernel2, 1, 1)
         self.pool = nn.MaxPool2d(2, 2)
         self.fc1 = nn.Linear(64 * 7 * 7, 128)
         self.fc2 = nn.Linear(128, num_classes)
@@ -139,12 +141,12 @@ class SimpleCNN6Conv(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, 1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, 1)
-        self.conv3 = nn.Conv2d(64, 128, kernel1, 1, 1)
-        self.conv4 = nn.Conv2d(128, 128, kernel2, 1, 1)
-        self.conv5 = nn.Conv2d(128, 64, kernel1, 1, 1)
-        self.conv6 = nn.Conv2d(64, 32, kernel2, 1, 1)
+        self.conv3 = nn.Conv2d(64, 64, kernel1, 1, 1)
+        self.conv4 = nn.Conv2d(64, 64, kernel2, 1, 1)
+        self.conv5 = nn.Conv2d(64, 64, kernel1, 1, 1)
+        self.conv6 = nn.Conv2d(64, 64, kernel2, 1, 1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 7 * 7, 128)
+        self.fc1 = nn.Linear(64 * 3 * 3, 128)
         self.fc2 = nn.Linear(128, num_classes)
         self.dropout = nn.Dropout(0.25)
     
@@ -183,7 +185,30 @@ class CNNWithBottleneck(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
-
+        
+class CNNWithWideres(nn.Module):
+    def __init__(self, input_channels=1, num_classes=10, kernel1=3, kernel2 = 3):
+        super().__init__()
+        self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, 1)
+        self.bn1 = nn.BatchNorm2d(32)
+        
+        self.res1 = WideResidualBlock(32, 32)
+        self.res2 = WideResidualBlock(32, 64, 2)
+        self.res3 = WideResidualBlock(64, 64)
+        
+        self.pool = nn.AdaptiveAvgPool2d((4, 4))
+        self.fc = nn.Linear(64 * 4 * 4, num_classes)
+    
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = self.res1(x)
+        x = self.res2(x)
+        x = self.res3(x)
+        x = self.pool(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
+        
 class CNNWithResidual(nn.Module):
     def __init__(self, input_channels=1, num_classes=10, kernel1=3, kernel2 = 3):
         super().__init__()
@@ -208,29 +233,6 @@ class CNNWithResidual(nn.Module):
         return x
 
 
-class CNNWithWideres(nn.Module):
-    def __init__(self, input_channels=1, num_classes=10, kernel1=3, kernel2 = 3):
-        super().__init__()
-        self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, 1)
-        self.bn1 = nn.BatchNorm2d(32)
-        
-        self.res1 = WideResidualBlock(32, 32)
-        self.res2 = WideResidualBlock(32, 64, 2)
-        self.res3 = WideResidualBlock(64, 64)
-        
-        self.pool = nn.AdaptiveAvgPool2d((4, 4))
-        self.fc = nn.Linear(64 * 4 * 4, num_classes)
-    
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = self.res1(x)
-        x = self.res2(x)
-        x = self.res3(x)
-        x = self.pool(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        return x
-
 class CIFARCNN(nn.Module):
     def __init__(self, num_classes=10, kernel=3):
         super().__init__()
@@ -252,7 +254,6 @@ class CIFARCNN(nn.Module):
         x = self.fc2(x)
         return x 
 
-
 class CastomNoise(nn.Module):
     def __init__(self, std=0.1):
         super().__init__()
@@ -270,8 +271,8 @@ class CastomWithNoiseSimpleCNN(nn.Module):
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, padding1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, padding2)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 8 * 8, 256)
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc1 = nn.Linear(64 * 16 * 16, 256)
+        self.fc2 = nn.Linear(256, num_classes)
         self.dropout = nn.Dropout(0.25)
         self.noise = CastomNoise(std=0.1)
     
@@ -316,8 +317,8 @@ class CastomAttentionSimpleCNN(nn.Module):
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, padding1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, padding2)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 8 * 8, 128)
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc1 = nn.Linear(64 * 16 * 16, 256)
+        self.fc2 = nn.Linear(256, num_classes)
         self.dropout = nn.Dropout(0.25)
         self.attention = Attention(64)
     
@@ -344,8 +345,8 @@ class CastomGeluSimpleCNN(nn.Module):
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, padding1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, padding2)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 8 * 8, 256)
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc1 = nn.Linear(64 * 16 * 16, 256)
+        self.fc2 = nn.Linear(256, num_classes)
         self.dropout = nn.Dropout(0.25)
         self.gelu = GELU()
     
@@ -394,8 +395,8 @@ class CastomPoolSimpleCNN(nn.Module):
         self.conv1 = nn.Conv2d(input_channels, 32, kernel1, 1, padding1)
         self.conv2 = nn.Conv2d(32, 64, kernel2, 1, padding2)
         self.pool = CastomSoftPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 8 * 8, 256)
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc1 = nn.Linear(64 * 16 * 16, 256)
+        self.fc2 = nn.Linear(256, num_classes)
         self.dropout = nn.Dropout(0.25)
     
     def forward(self, x):

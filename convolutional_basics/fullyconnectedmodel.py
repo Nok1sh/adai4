@@ -4,7 +4,7 @@ import json
 
 
 class FullyConnectedModel(nn.Module):
-    def __init__(self, config_path="config_fullymodel.json", input_size=None, num_classes=None, **kwargs):
+    def __init__(self, config_path="convolutional_basics/config_fullymodel.json", input_size=None, num_classes=None, **kwargs):
         super().__init__()
         
         if config_path:

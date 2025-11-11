@@ -8,7 +8,7 @@ class MNISTDataset(Dataset):
     def __init__(self, train=True, transform=None):
         super().__init__()
         self.dataset = torchvision.datasets.MNIST(
-            root='./data', 
+            root='data', 
             train=train, 
             download=True, 
             transform=transform
@@ -25,7 +25,7 @@ class CIFARDataset(Dataset):
     def __init__(self, train=True, transform=None):
         super().__init__()
         self.dataset = torchvision.datasets.CIFAR10(
-            root='./data', 
+            root='./cifar_data', 
             train=train, 
             download=True, 
             transform=transform
